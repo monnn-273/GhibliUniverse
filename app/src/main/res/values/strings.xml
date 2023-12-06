@@ -2,4 +2,6 @@
     <string name="app_name">GhibliUniverse</string>
     <string name="scroll_to_top">Scroll to Top</string>
     <string name="search_movie">Find a Movie</string>
+    <string name="menu_home">Home</string>
+    <string name="menu_profile">My Profile</string>
 </resources>

@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +20,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -28,6 +30,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -44,165 +49,118 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
+import com.monika.ghibliuniverse.data.GhibliMovieRepository
 import com.monika.ghibliuniverse.model.GhibliMoviesData
+import com.monika.ghibliuniverse.ui.navigation.NavigationItem
+import com.monika.ghibliuniverse.ui.navigation.Screen
+import com.monika.ghibliuniverse.ui.screen.DetailScreen
+import com.monika.ghibliuniverse.ui.screen.HomeScreen
+import com.monika.ghibliuniverse.ui.screen.MyProfileScreen
+import com.monika.ghibliuniverse.viewmodel.GhibliMoviesViewModel
 import com.monika.ghibliuniverse.ui.theme.GhibliUniverseTheme
+import com.monika.ghibliuniverse.viewmodel.ViewModelFactory
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GhibliMoviesApp(
     modifier: Modifier = Modifier,
-    viewModel: GhibliMoviesViewModel = viewModel(factory = ViewModelFactory(GhibliMovieRepository()))
+    navController: NavHostController = rememberNavController()
 ) {
-    Box(modifier = modifier) {
-        val scope = rememberCoroutineScope()
-        val listState = rememberLazyListState()
-        val showButton: Boolean by remember(listState) {
-            derivedStateOf { listState.firstVisibleItemIndex > 0 }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Scaffold (
+        bottomBar = {
+            if (currentRoute != Screen.Detail.route) {
+                BottomBar(navController)
+            }
         }
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(bottom = 80.dp)
+    ) { innerPadding ->
+        NavHost(
+            navController =  navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(innerPadding)
         ) {
-            itemsIndexed(GhibliMoviesData.ghibliMovies) { index, ghibliMovie ->
-                GhibliMovieListItem(
-                    title = ghibliMovie.title,
-                    posterUrl = ghibliMovie.posterUrl,
-                    caption = ghibliMovie.caption,
-                    modifier = Modifier.fillMaxWidth()
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    navigateToDetail = { movieId ->
+                        navController.navigate(Screen.Detail.createRoute(movieId))
+                    }
+                )
+            }
+            composable(
+                route = Screen.Profile.route) {
+                MyProfileScreen()
+            }
+            composable(
+                route = Screen.Detail.route,
+                arguments = listOf(navArgument("movie_id") { type = NavType.IntType }),
+            ) {
+                val id = it.arguments?.getInt("movie") ?: 0
+                DetailScreen(
+                    id = id,
+                    navigateBack = {
+                        navController.navigateUp()
+                    },
                 )
             }
         }
+    }
+}
 
-        AnimatedVisibility(
-            visible = showButton,
-            enter = fadeIn() + slideInVertically(),
-            exit = fadeOut() + slideOutVertically(),
-            modifier = Modifier
-                .padding(bottom = 30.dp)
-                .align(Alignment.BottomCenter)
-        ) {
-            ScrollToTopButton(
+@Composable
+fun BottomBar(
+    navController: NavHostController,
+    modifier: Modifier =  Modifier
+) {
+    NavigationBar (
+        modifier = modifier,
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+        val navigationItems = listOf(
+            NavigationItem(
+                title = stringResource(R.string.menu_home),
+                icon = Icons.Default.Home,
+                screen = Screen.Home
+            ),
+            NavigationItem(
+                title = stringResource(R.string.menu_profile),
+                icon = Icons.Default.AccountCircle,
+                screen = Screen.Profile
+            ),
+        )
+        navigationItems.map {
+            NavigationBarItem (
+                icon = {
+                    Icon(
+                        imageVector = it.icon,
+                        contentDescription = it.title
+                    )
+                },
+                label = {Text (it.title)},
+                selected = currentRoute == it.screen.route,
                 onClick = {
-                    scope.launch {
-                        listState.scrollToItem(index = 0)
+                    navController.navigate(it.screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        restoreState = true
+                        launchSingleTop = true
                     }
                 }
             )
         }
-    }
-}
-
-@Composable
-fun GhibliMovieListItem(
-    title: String,
-    caption: String,
-    posterUrl: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(4.dp), // Kurangi padding di sini
-        shape = RoundedCornerShape(8.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clickable {}
-                .padding(4.dp) // Kurangi padding di sini
-        ) {
-            AsyncImage(
-                model = posterUrl,
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier
-                    .size(80.dp, 120.dp) // Kurangi ukuran gambar di sini
-                    .clip(RoundedCornerShape(8.dp))
-            )
-
-            Column(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 18.sp,
-                    modifier = Modifier
-                        .wrapContentWidth()
-                )
-
-                Text(
-                    text = caption,
-                    modifier = Modifier
-                        .wrapContentWidth()
-                )
-            }
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun GhibliMovieListItemPreview() {
-    GhibliUniverseTheme {
-        GhibliMovieListItem(
-            title = "Howl's Moving Castle",
-            caption="Lorem ipsum dolor sit amet",
-            posterUrl = "https://upload.wikimedia.org/wikipedia/en/a/a0/Howls-moving-castleposter.jpg"
-        )
-    }
-}
-
-//Scroll to Top Button
-@Composable
-fun ScrollToTopButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    FilledIconButton(
-        onClick = onClick,
-        modifier = modifier
-    ) {
-        Icon(
-            imageVector = Icons.Filled.KeyboardArrowUp,
-            contentDescription = stringResource(R.string.scroll_to_top),
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    SearchBar(
-        query = query,
-        onQueryChange = onQueryChange,
-        onSearch = {},
-        active = false,
-        onActiveChange = {},
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        placeholder = {
-            Text(stringResource(R.string.search_movie))
-        },
-        shape = MaterialTheme.shapes.large,
-        modifier = modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-    ) {
     }
 }
