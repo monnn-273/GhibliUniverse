@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.monika.ghibliuniverse.data.Repository
 import com.monika.ghibliuniverse.model.GhibliMovies
-import com.monika.ghibliuniverse.common.UiState
+import com.monika.ghibliuniverse.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

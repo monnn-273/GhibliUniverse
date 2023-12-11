@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,14 +34,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.monika.ghibliuniverse.R
 import com.monika.ghibliuniverse.model.GhibliMovies
-import com.monika.ghibliuniverse.common.UiState
-import com.monika.ghibliuniverse.ui.blade.EmpyList
-import com.monika.ghibliuniverse.ui.blade.SearchBar
+import com.monika.ghibliuniverse.ui.common.UiState
 import com.monika.ghibliuniverse.viewmodel.HomeScreenViewModel
+import com.monika.ghibliuniverse.ui.screen.EmptyList
 
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
     navigateToDetail: (Int) -> Unit,
     viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
@@ -58,9 +57,7 @@ fun HomeScreen(
                     navigateToDetail = navigateToDetail
                 )
             }
-            is UiState.Error -> {
-                EmpyList()
-            }
+            is UiState.Error -> {}
         }
     }
 }
@@ -93,7 +90,11 @@ fun HomeContent(
                 }
             }
         } else {
-            EmptyList()
+            EmptyList(
+                Warning = "Null",
+                modifier = Modifier
+                    .testTag("emptyList")
+            )
         }
     }
 }

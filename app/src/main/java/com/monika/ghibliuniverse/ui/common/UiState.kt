@@ -1,4 +1,4 @@
-package com.monika.ghibliuniverse.common
+package com.monika.ghibliuniverse.ui.common
 
 sealed class UiState<out T: Any?> {
     object Loading : UiState<Nothing>()

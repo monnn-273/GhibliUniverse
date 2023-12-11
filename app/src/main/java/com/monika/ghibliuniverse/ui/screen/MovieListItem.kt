@@ -1,4 +1,4 @@
-package com.monika.ghibliuniverse.ui.blade
+package com.monika.ghibliuniverse.ui.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,7 +48,7 @@ fun MovieListItem(
         {
             Text(
                 text = title,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.ExtraBold,
             )
             Text(
                 text = caption,

@@ -1,4 +1,4 @@
-package com.monika.ghibliuniverse.ui.blade
+package com.monika.ghibliuniverse.ui.screen
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
