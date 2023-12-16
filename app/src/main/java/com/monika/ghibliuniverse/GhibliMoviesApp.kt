@@ -32,7 +32,6 @@ fun GhibliMoviesApp(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -50,8 +49,8 @@ fun GhibliMoviesApp(
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
-                    navigateToDetail = { movieId ->
-                        navController.navigate(Screen.Detail.createRoute(movieId))
+                    navigateToDetail = { MovieId ->
+                        navController.navigate(Screen.Detail.createRoute(MovieId))
                     }
                 )
             }
@@ -61,11 +60,11 @@ fun GhibliMoviesApp(
             }
             composable(
                 route = Screen.Detail.route,
-                arguments = listOf(navArgument("movie_id") { type = NavType.IntType }),
+                arguments = listOf(navArgument("MovieId") { type = NavType.IntType }),
             ) {
-                val id = it.arguments?.getInt("movie") ?: 0
+                val MovieId = it.arguments?.getInt("movie") ?: 0
                 DetailScreen(
-                    id = id,
+                    MovieId = MovieId,
                     navigateBack = {
                         navController.navigateUp()
                     },

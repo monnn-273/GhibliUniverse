@@ -11,13 +11,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,14 +33,14 @@ import com.monika.ghibliuniverse.viewmodel.DetailScreenViewModel
 
 @Composable
 fun DetailScreen(
-    id : Int,
+    MovieId : Int,
     viewModel: DetailScreenViewModel = hiltViewModel(),
     navigateBack: ()-> Unit
 ) {
     viewModel.uiState.collectAsState(initial = UiState.Loading).value.let{
         when(it) {
             is UiState.Loading -> {
-                viewModel.getMovieById(id)
+                viewModel.getMovieById(MovieId)
             }
             is UiState.Success -> {
                 val movie = it.data
@@ -49,7 +52,9 @@ fun DetailScreen(
                     onBackClick = navigateBack
                 )
             }
-            is UiState.Error -> {}
+            is UiState.Error -> {
+                MyEmptyList()
+            }
         }
     }
 }
@@ -70,6 +75,20 @@ fun DetailContent(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ){
+            Row (
+                modifier = modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = ("back"),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .clickable { onBackClick() }
+                )
+            }
             AsyncImage(
                 model = posterUrl,
                 contentDescription = null,
@@ -78,7 +97,6 @@ fun DetailContent(
                     .padding(20.dp)
                     .size(250.dp)
             )
-
             Row (modifier = modifier) {
                 Text(
                     text = title,
@@ -99,16 +117,14 @@ fun DetailContent(
 
                 )
             }
-            Box{
-                Text(
-                    text = summary,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 30.dp)
-                )
-            }
+            Text(
+                text = summary,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 30.dp)
+            )
         }
     }
 }

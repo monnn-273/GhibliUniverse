@@ -23,7 +23,6 @@ class GhibliMovieRepository @Inject constructor(): Repository {
            val GhibliMoviesData = movies.filter{
                it.title.contains(query, ignoreCase = true)
             }
-
             emit(GhibliMoviesData)
     }
 

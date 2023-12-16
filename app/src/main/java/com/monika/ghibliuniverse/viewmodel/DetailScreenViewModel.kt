@@ -20,9 +20,9 @@ class DetailScreenViewModel @Inject constructor(
     val uiState: StateFlow<UiState<GhibliMovies>>
         get() = _uiState
 
-    fun getMovieById(movieId: Int){
+    fun getMovieById(MovieId: Int){
         viewModelScope.launch{
-            repository.getMovieById(movieId).catch{
+            repository.getMovieById(MovieId).catch{
                 _uiState.value = UiState.Error(it.message.toString())}
                 .collect {
                     _uiState.value = UiState.Success(it)}

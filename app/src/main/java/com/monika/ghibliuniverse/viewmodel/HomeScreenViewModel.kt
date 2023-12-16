@@ -23,6 +23,13 @@ class HomeScreenViewModel @Inject constructor(
     val uiState: StateFlow<UiState<List<GhibliMovies>>>
         get() = _uiState
 
+    private val _groupedMovie = MutableStateFlow(
+        repository.getGhibliMovies()
+            .sortedBy { it.title }
+            .groupBy { it.title[0] }
+    )
+    val groupedMovie: StateFlow<Map<Char, List<GhibliMovies>>> get() = _groupedMovie
+
     private val _query = mutableStateOf("")
     val query: State<String> get() =_query
     fun searchMovie(newQuery: String) = viewModelScope.launch {
