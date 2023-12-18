@@ -8,6 +8,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -87,84 +89,95 @@ fun HomeScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeContent(
-    modifier : Modifier = Modifier,
+    modifier: Modifier = Modifier,
     listMovie: List<GhibliMovies>,
     navigateToDetail: (Int) -> Unit,
     viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
-    val groupedMovie by viewModel.groupedMovie.collectAsState()
     val query by viewModel.query
 
-    Box(modifier = modifier) {
-        val scope = rememberCoroutineScope()
-        val listState = rememberLazyListState()
-        val showButton: Boolean by remember {
-            derivedStateOf { listState.firstVisibleItemIndex > 0 }
-        }
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            item {
+    // Use AnimatedVisibility to wrap the entire content
+    AnimatedVisibility(
+        visible = true, // Set the appropriate visibility condition
+        enter = fadeIn() + slideInVertically(),
+        exit = fadeOut() + slideOutVertically(),
+    ) {
+        Column {
+            // SearchBar wrapped in a Box
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
                 SearchBar(
                     query = query,
-                    onQueryChange = viewModel::searchMovie,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable {}
+                    onQueryChange = viewModel::searchMovie
                 )
             }
-            groupedMovie.forEach { (initial, item) ->
-                stickyHeader {
-                    CharacterHeader(initial)
+
+            Box(modifier = modifier) {
+                val scope = rememberCoroutineScope()
+                val listState = rememberLazyListState()
+                val showButton: Boolean by remember {
+                    derivedStateOf { listState.firstVisibleItemIndex > 0 }
                 }
-                items(item, key = { it.id }) { movie ->
-                    MovieListItem(
-                        title = movie.title,
-                        posterUrl = movie.posterUrl,
-                        caption = movie.caption,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateItemPlacement(tween(durationMillis = 100))
-                            .clickable { navigateToDetail(movie.id) }
+
+                LazyColumn(
+                    modifier = modifier,
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    items(listMovie) { movie ->
+                        MovieListItem(
+                            title = movie.title,
+                            posterUrl = movie.posterUrl,
+                            caption = movie.caption,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateItemPlacement(tween(durationMillis = 100))
+                                .clickable { navigateToDetail(movie.id) }
+                        )
+                    }
+                }
+
+                // Move AnimatedVisibility to wrap the ScrollToTopButton
+                this@Column.AnimatedVisibility(
+                    visible = showButton,
+                    enter = fadeIn() + slideInVertically(),
+                    exit = fadeOut() + slideOutVertically(),
+                    modifier = Modifier
+                        .padding(bottom = 30.dp)
+                        .align(Alignment.BottomCenter)
+                ) {
+                    ScrollToTopButton(
+                        onClick = {
+                            scope.launch {
+                                listState.scrollToItem(index = 0)
+                            }
+                        }
                     )
                 }
             }
         }
-        AnimatedVisibility(
-            visible = showButton,
-            enter = fadeIn() + slideInVertically(),
-            exit = fadeOut() + slideOutVertically(),
-            modifier = Modifier
-                .padding(bottom = 30.dp)
-                .align(Alignment.BottomCenter)
-        ) {
-            ScrollToTopButton(
-                onClick = {
-                    scope.launch {
-                        //scrollToItem untuk menuju ke index item tertentu
-                        listState.scrollToItem(index = 0)
-                    }
-                }
-            )
-        }
     }
 }
 
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MovieListItem(
     title: String,
     posterUrl: String,
     caption: String,
-    modifier: Modifier = Modifier) {
-    Card(
+    modifier: Modifier = Modifier
+) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(4.dp),
-        shape = RoundedCornerShape(8.dp),
+            .padding(4.dp)
+            .border(1.dp, Color.Gray, shape = RoundedCornerShape(8.dp))
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
             modifier = Modifier
                 .clickable {}
                 .padding(4.dp)
@@ -219,27 +232,6 @@ fun ScrollToTopButton(
     }
 }
 
-@Composable
-fun CharacterHeader(
-    char: Char,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.primary,
-        modifier = modifier
-    ) {
-        Text(
-            text = char.toString(),
-            fontWeight = FontWeight.Black,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(3.dp)
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(
@@ -247,27 +239,22 @@ fun SearchBar(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    androidx.compose.material3.SearchBar(
-        query = query,
-        onQueryChange = onQueryChange,
-        onSearch = {},
-        active = false,
-        onActiveChange = {},
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                contentDescription = null
             )
         },
         placeholder = {
             Text(stringResource(R.string.search_movie))
         },
-        shape = MaterialTheme.shapes.large,
         modifier = modifier
-            .padding(10.dp)
+            .padding(16.dp)
             .fillMaxWidth()
             .heightIn(min = 48.dp)
-    ) {
-    }
+            .clip(RoundedCornerShape(16.dp))
+    )
 }
