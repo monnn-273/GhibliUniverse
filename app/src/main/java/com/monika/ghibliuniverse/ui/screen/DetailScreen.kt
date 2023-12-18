@@ -62,7 +62,7 @@ fun DetailScreen(
                 )
             }
             is UiState.Error -> {
-                MyEmptyList()
+                MyEmptyList(Warning = "No Data Found")
             }
         }
     }

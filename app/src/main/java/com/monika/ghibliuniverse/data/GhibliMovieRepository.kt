@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//  berfungsi sebagai repository untuk data movie dan mengimplementasikan interface Repository
 @Singleton
 class GhibliMovieRepository @Inject constructor(): Repository {
 

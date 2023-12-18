@@ -29,7 +29,6 @@ import com.monika.ghibliuniverse.ui.screen.MyProfileScreen
 
 @Composable
 fun GhibliMoviesApp(
-    modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController()
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -49,22 +48,22 @@ fun GhibliMoviesApp(
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
-                    navigateToDetail = { MovieId ->
-                        navController.navigate(Screen.Detail.createRoute(MovieId))
+                    navigateToDetail = { movieId ->
+                        navController.navigate(Screen.Detail.createRoute(movieId))
                     }
                 )
             }
             composable(
-                route = Screen.Profile.route) {
+                route = Screen.MyProfile.route) {
                 MyProfileScreen()
             }
             composable(
                 route = Screen.Detail.route,
                 arguments = listOf(navArgument("MovieId") { type = NavType.IntType }),
             ) {
-                val MovieId = it.arguments?.getInt("movie") ?: 0
+                val id = it.arguments?.getInt("MovieId") ?: 0
                 DetailScreen(
-                    MovieId = MovieId,
+                    MovieId = id,
                     navigateBack = {
                         navController.navigateUp()
                     },
@@ -93,7 +92,7 @@ fun BottomBar(
             NavigationItem(
                 title = stringResource(R.string.menu_profile),
                 icon = Icons.Default.AccountCircle,
-                screen = Screen.Profile
+                screen = Screen.MyProfile
             ),
         )
         navigationItems.map {
